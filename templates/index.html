@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Research Paper Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/enhanced.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/files.css') }}" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-graduation-cap me-2"></i>
+                AI Research Paper Generator
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text">
+                    <i class="fas fa-robot me-1"></i>
+                    Powered by AI & Real Citations
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h1 class="card-title">
+                            <i class="fas fa-file-alt text-primary me-2"></i>
+                            Generate Academic Research Papers
+                        </h1>
+                        <p class="card-text lead">
+                            Create structured research papers with real citations from academic databases
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Form -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-edit me-2"></i>
+                            Paper Configuration
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="paperForm">
+                            <!-- Topic Input -->
+                            <div class="mb-3">
+                                <label for="topic" class="form-label">
+                                    <i class="fas fa-lightbulb text-warning me-1"></i>
+                                    Research Topic *
+                                </label>
+                                <input type="text" class="form-control" id="topic" 
+                                       placeholder="e.g., AI in Healthcare, Climate Change Solutions, Blockchain in Finance"
+                                       required>
+                                <div class="form-text">Enter your research topic or question</div>
+                            </div>
+
+                            <!-- Keywords -->
+                            <div class="mb-3">
+                                <label for="keywords" class="form-label">
+                                    <i class="fas fa-tags text-info me-1"></i>
+                                    Keywords (Optional)
+                                </label>
+                                <input type="text" class="form-control" id="keywords" 
+                                       placeholder="machine learning, diagnosis, treatment">
+                                <div class="form-text">Comma-separated keywords to enhance citations</div>
+                            </div>
+
+                            <!-- Research Field -->
+                            <div class="mb-3">
+                                <label for="researchField" class="form-label">
+                                    <i class="fas fa-microscope text-info me-1"></i>
+                                    Research Field
+                                </label>
+                                <select class="form-select" id="researchField">
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Healthcare">Healthcare & Medicine</option>
+                                    <option value="Business">Business & Economics</option>
+                                    <option value="Engineering">Engineering</option>
+                                    <option value="Social Sciences">Social Sciences</option>
+                                </select>
+                            </div>
+
+                            <!-- Research Level -->
+                            <div class="mb-3">
+                                <label for="researchLevel" class="form-label">
+                                    <i class="fas fa-layer-group text-success me-1"></i>
+                                    Research Level
+                                </label>
+                                <select class="form-select" id="researchLevel">
+                                    <option value="beginner">Beginner (150 words/section)</option>
+                                    <option value="intermediate" selected>Intermediate (200 words/section)</option>
+                                    <option value="advanced">Advanced (300 words/section)</option>
+                                </select>
+                            </div>
+
+                            <!-- Citation Style -->
+                            <div class="mb-3">
+                                <label for="citationStyle" class="form-label">
+                                    <i class="fas fa-quote-right text-secondary me-1"></i>
+                                    Citation Style
+                                </label>
+                                <select class="form-select" id="citationStyle">
+                                    <option value="APA" selected>APA Style</option>
+                                    <option value="MLA">MLA Style</option>
+                                    <option value="IEEE">IEEE Style</option>
+                                </select>
+                            </div>
+
+                            <!-- Sections Selection -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-list text-primary me-1"></i>
+                                    Paper Sections
+                                </label>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="abstract" checked>
+                                            <label class="form-check-label" for="abstract">Abstract</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="introduction" checked>
+                                            <label class="form-check-label" for="introduction">Introduction</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="literature_review" checked>
+                                            <label class="form-check-label" for="literature_review">Literature Review</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="methodology">
+                                            <label class="form-check-label" for="methodology">Methodology</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="results">
+                                            <label class="form-check-label" for="results">Results</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="conclusion" checked>
+                                            <label class="form-check-label" for="conclusion">Conclusion</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Generate Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg" id="generateBtn">
+                                    <i class="fas fa-magic me-2"></i>
+                                    Generate Research Paper
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Sidebar -->
+            <div class="col-lg-4">
+                <div class="card shadow mb-3">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-star me-2"></i>
+                            Key Features
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Real academic citations
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Multiple citation styles
+                            </li>
+
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                PDF export
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Key insights summary
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                AI writing assistant
+                            </li>
+
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Multiple export formats
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card shadow">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            Sample Topics
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary btn-sm sample-topic" 
+                                    data-topic="AI in Healthcare">AI in Healthcare</button>
+                            <button class="btn btn-outline-primary btn-sm sample-topic" 
+                                    data-topic="Climate Change Solutions">Climate Change Solutions</button>
+                            <button class="btn btn-outline-primary btn-sm sample-topic" 
+                                    data-topic="Blockchain in Finance">Blockchain in Finance</button>
+                            <button class="btn btn-outline-primary btn-sm sample-topic" 
+                                    data-topic="Renewable Energy Technologies">Renewable Energy</button>
+                        </div>
+                        
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="row mt-4" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="spinner-border text-primary me-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span id="loadingText">Generating your research paper...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="row mt-4" style="display: none;">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-alt me-2"></i>
+                            Generated Research Paper
+                        </h5>
+                        <div class="btn-group">
+                            <button class="btn btn-light btn-sm" id="downloadBtn" style="display: none;">
+                                <i class="fas fa-file-pdf me-1"></i>
+                                Download PDF
+                            </button>
+                            <button class="btn btn-light btn-sm" id="latexBtn" style="display: none;">
+                                <i class="fas fa-code me-1"></i>
+                                Download LaTeX
+                            </button>
+                            <button class="btn btn-success btn-sm" id="packageBtn" style="display: none;">
+                                <i class="fas fa-archive me-1"></i>
+                                Complete Package
+                            </button>
+                            <button class="btn btn-light btn-sm" id="shareBtn">
+                                <i class="fas fa-share-alt me-1"></i>
+                                Share
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="paperContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quality Analysis Results -->
+        <div id="qualityResults" class="row mt-3" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Quality Analysis Report
+                        </h6>
+                    </div>
+                    <div class="card-body" id="qualityContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Peer Review Results -->
+        <div id="peerReviewResults" class="row mt-3" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">
+                            <i class="fas fa-user-graduate me-2"></i>
+                            AI Peer Review
+                        </h6>
+                    </div>
+                    <div class="card-body" id="peerReviewContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plagiarism Results -->
+        <div id="plagiarismResults" class="row mt-3" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            Plagiarism Check Results
+                        </h6>
+                    </div>
+                    <div class="card-body" id="plagiarismContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Share Modal -->
+        <div class="modal fade" id="shareModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-share-alt me-2"></i>
+                            Share Research Paper
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Share Link:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="shareLink" readonly>
+                                <button class="btn btn-outline-secondary" id="copyLinkBtn">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            This link will be valid for 7 days and allows read-only access.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0">
+                <i class="fas fa-graduation-cap me-2"></i>
+                AI Research Paper Generator - Hackathon Project 2024
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

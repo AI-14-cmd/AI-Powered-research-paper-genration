@@ -1,0 +1,381 @@
+from typing import Dict, List
+
+class LaTeXService:
+    def __init__(self):
+        self.document_classes = {
+            'article': 'article',
+            'report': 'report',
+            'book': 'book',
+            'ieee': 'IEEEtran',
+            'acm': 'acmart'
+        }
+        
+        self.packages = [
+            'inputenc',
+            'fontenc', 
+            'babel',
+            'amsmath',
+            'amsfonts',
+            'amssymb',
+            'graphicx',
+            'cite',
+            'url',
+            'hyperref'
+        ]
+    
+    def generate_latex_document(self, paper_content: Dict, template_type: str = 'article') -> str:
+        """Generate complete LaTeX document from paper content"""
+        citation_style = paper_content.get('metadata', {}).get('citation_style', 'APA')
+        
+        if citation_style.upper() == 'IEEE':
+            return self.generate_ieee_template(paper_content)
+        elif citation_style.upper() == 'ACM':
+            return self.generate_acm_template(paper_content)
+        else:
+            # APA/MLA use standard article format
+            latex_content = self._generate_preamble(template_type, citation_style)
+            latex_content += self._generate_title_page(paper_content, citation_style)
+            latex_content += self._generate_document_body(paper_content)
+            latex_content += self._generate_bibliography(paper_content, citation_style)
+            latex_content += "\\end{document}\n"
+            
+            return latex_content
+    
+    def _generate_preamble(self, template_type: str, citation_style: str = 'APA') -> str:
+        """Generate LaTeX document preamble"""
+        doc_class = self.document_classes.get(template_type, 'article')
+        
+        if citation_style.upper() == 'APA':
+            preamble = f"\\documentclass[12pt,a4paper]{{{doc_class}}}\n\n"
+            preamble += "% APA Style packages\n"
+            preamble += "\\usepackage[utf8]{inputenc}\n"
+            preamble += "\\usepackage[T1]{fontenc}\n"
+            preamble += "\\usepackage[english]{babel}\n"
+            preamble += "\\usepackage{amsmath,amsfonts,amssymb}\n"
+            preamble += "\\usepackage{graphicx}\n"
+            preamble += "\\usepackage{apacite}\n"
+            preamble += "\\usepackage{url}\n"
+            preamble += "\\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}\n\n"
+            preamble += "% APA formatting\n"
+            preamble += "\\setlength{\\parindent}{0.5in}\n"
+            preamble += "\\setlength{\\parskip}{0pt}\n"
+            preamble += "\\linespread{2.0}\n\n"
+        elif citation_style.upper() == 'MLA':
+            preamble = f"\\documentclass[12pt,letterpaper]{{{doc_class}}}\n\n"
+            preamble += "% MLA Style packages\n"
+            preamble += "\\usepackage[utf8]{inputenc}\n"
+            preamble += "\\usepackage[T1]{fontenc}\n"
+            preamble += "\\usepackage[english]{babel}\n"
+            preamble += "\\usepackage{amsmath,amsfonts,amssymb}\n"
+            preamble += "\\usepackage{graphicx}\n"
+            preamble += "\\usepackage{mla13}\n"
+            preamble += "\\usepackage{url}\n"
+            preamble += "\\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}\n\n"
+            preamble += "% MLA formatting\n"
+            preamble += "\\setlength{\\parindent}{0.5in}\n"
+            preamble += "\\setlength{\\parskip}{0pt}\n"
+            preamble += "\\linespread{2.0}\n\n"
+        else:
+            preamble = f"\\documentclass[12pt,a4paper]{{{doc_class}}}\n\n"
+            preamble += "% Standard packages\n"
+            preamble += "\\usepackage[utf8]{inputenc}\n"
+            preamble += "\\usepackage[T1]{fontenc}\n"
+            preamble += "\\usepackage[english]{babel}\n"
+            preamble += "\\usepackage{amsmath,amsfonts,amssymb}\n"
+            preamble += "\\usepackage{graphicx}\n"
+            preamble += "\\usepackage{cite}\n"
+            preamble += "\\usepackage{url}\n"
+            preamble += "\\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}\n\n"
+            preamble += "% Document settings\n"
+            preamble += "\\setlength{\\parindent}{0pt}\n"
+            preamble += "\\setlength{\\parskip}{6pt}\n"
+            preamble += "\\linespread{1.5}\n\n"
+        
+        return preamble
+    
+    def _generate_title_page(self, paper_content: Dict, citation_style: str = 'APA') -> str:
+        """Generate LaTeX title page"""
+        title = self._escape_latex(paper_content.get('title', 'Research Paper'))
+        
+        if citation_style.upper() == 'MLA':
+            # MLA format - no title page, header format
+            title_page = "\\begin{document}\n"
+            title_page += "\\firstname{Student}\n"
+            title_page += "\\lastname{Name}\n"
+            title_page += "\\professor{Professor Name}\n"
+            title_page += "\\class{Course Name}\n"
+            title_page += "\\title{" + title + "}\n"
+            title_page += "\\date{\\today}\n"
+            title_page += "\\makeheader\n\n"
+        else:
+            # APA format - centered title page
+            title_page = "\\begin{document}\n"
+            title_page += "\\begin{titlepage}\n"
+            title_page += "\\centering\n"
+            title_page += "\\vspace*{2in}\n"
+            title_page += f"\\textbf{{\\Large {title}}}\\\\[0.5in]\n"
+            title_page += "\\textbf{Generated by AI Research Paper Generator}\\\\[0.2in]\n"
+            title_page += "\\textbf{Hackathon Project 2024}\\\\[0.5in]\n"
+            title_page += "\\today\n"
+            title_page += "\\end{titlepage}\n"
+            title_page += "\\newpage\n\n"
+        
+        return title_page
+    
+    def _generate_document_body(self, paper_content: Dict) -> str:
+        """Generate main document body"""
+        body = ""
+        
+        # Abstract
+        if 'abstract' in paper_content:
+            body += "\\begin{abstract}\n"
+            body += self._escape_latex(paper_content['abstract'])
+            body += "\n\\end{abstract}\n\n"
+        
+        # Table of contents (optional)
+        body += "\\tableofcontents\n"
+        body += "\\newpage\n\n"
+        
+        # Introduction
+        if 'introduction' in paper_content:
+            body += "\\section{Introduction}\n"
+            body += self._escape_latex(paper_content['introduction'])
+            body += "\n\n"
+        
+        # Literature Review
+        if 'literature_review' in paper_content:
+            body += "\\section{Literature Review}\n"
+            body += self._escape_latex(paper_content['literature_review'])
+            body += "\n\n"
+        
+        # Methodology
+        if 'methodology' in paper_content:
+            body += "\\section{Methodology}\n"
+            body += self._escape_latex(paper_content['methodology'])
+            body += "\n\n"
+        
+        # Results
+        if 'results' in paper_content:
+            body += "\\section{Results}\n"
+            body += self._escape_latex(paper_content['results'])
+            body += "\n\n"
+        
+        # Discussion
+        if 'discussion' in paper_content:
+            body += "\\section{Discussion}\n"
+            body += self._escape_latex(paper_content['discussion'])
+            body += "\n\n"
+        
+        # Conclusion
+        if 'conclusion' in paper_content:
+            body += "\\section{Conclusion}\n"
+            body += self._escape_latex(paper_content['conclusion'])
+            body += "\n\n"
+        
+        # Key Insights
+        if 'summary' in paper_content and paper_content['summary']:
+            body += "\\section{Key Insights}\n"
+            body += "\\begin{itemize}\n"
+            for point in paper_content['summary']:
+                body += f"\\item {self._escape_latex(point)}\n"
+            body += "\\end{itemize}\n\n"
+        
+        return body
+    
+    def _generate_bibliography(self, paper_content: Dict, citation_style: str = 'APA') -> str:
+        """Generate LaTeX bibliography"""
+        if not paper_content.get('references'):
+            return ""
+        
+        if citation_style.upper() == 'MLA':
+            bibliography = "\\begin{workscited}\n"
+            for reference in paper_content['references']:
+                clean_ref = self._escape_latex(reference)
+                bibliography += f"\\bibent {clean_ref}\n\n"
+            bibliography += "\\end{workscited}\n\n"
+        elif citation_style.upper() == 'APA':
+            bibliography = "\\bibliographystyle{apacite}\n"
+            bibliography += "\\section*{References}\n"
+            bibliography += "\\begin{thebibliography}{99}\n"
+            for i, reference in enumerate(paper_content['references'], 1):
+                clean_ref = self._escape_latex(reference)
+                bibliography += f"\\bibitem{{ref{i}}} {clean_ref}\n\n"
+            bibliography += "\\end{thebibliography}\n\n"
+        else:
+            # IEEE and others
+            bibliography = "\\begin{thebibliography}{99}\n"
+            for i, reference in enumerate(paper_content['references'], 1):
+                clean_ref = self._escape_latex(reference)
+                bibliography += f"\\bibitem{{ref{i}}} {clean_ref}\n\n"
+            bibliography += "\\end{thebibliography}\n\n"
+        
+        return bibliography
+    
+    def _escape_latex(self, text: str) -> str:
+        """Escape special LaTeX characters"""
+        if not text:
+            return ""
+        
+        # LaTeX special characters that need escaping
+        latex_chars = {
+            '&': '\\&',
+            '%': '\\%',
+            '$': '\\$',
+            '#': '\\#',
+            '^': '\\textasciicircum{}',
+            '_': '\\_',
+            '{': '\\{',
+            '}': '\\}',
+            '~': '\\textasciitilde{}',
+            '\\': '\\textbackslash{}'
+        }
+        
+        escaped_text = text
+        for char, replacement in latex_chars.items():
+            escaped_text = escaped_text.replace(char, replacement)
+        
+        return escaped_text
+    
+    def generate_ieee_template(self, paper_content: Dict) -> str:
+        """Generate IEEE conference paper template"""
+        latex_content = """\\documentclass[conference]{IEEEtran}
+\\usepackage[utf8]{inputenc}
+\\usepackage{amsmath,amssymb,amsfonts}
+\\usepackage{algorithmic}
+\\usepackage{graphicx}
+\\usepackage{textcomp}
+\\usepackage{xcolor}
+
+\\begin{document}
+
+"""
+        
+        # Title and authors
+        title = self._escape_latex(paper_content.get('title', 'Research Paper'))
+        latex_content += f"\\title{{{title}}}\n\n"
+        
+        latex_content += """\\author{\\IEEEauthorblockN{Generated by AI Research Paper Generator}
+\\IEEEauthorblockA{\\textit{AI Research Paper Generator} \\\\
+\\textit{Hackathon Project 2024}}}
+
+\\maketitle
+
+"""
+        
+        # Abstract
+        if 'abstract' in paper_content:
+            latex_content += "\\begin{abstract}\n"
+            latex_content += self._escape_latex(paper_content['abstract'])
+            latex_content += "\n\\end{abstract}\n\n"
+        
+        # Keywords
+        if paper_content.get('metadata', {}).get('keywords'):
+            keywords = ', '.join(paper_content['metadata']['keywords'])
+            latex_content += f"\\begin{{IEEEkeywords}}\n{self._escape_latex(keywords)}\n\\end{{IEEEkeywords}}\n\n"
+        
+        # Sections
+        sections = [
+            ('introduction', 'Introduction'),
+            ('literature_review', 'Related Work'),
+            ('methodology', 'Methodology'),
+            ('results', 'Results'),
+            ('conclusion', 'Conclusion')
+        ]
+        
+        for section_key, section_title in sections:
+            if section_key in paper_content:
+                latex_content += f"\\section{{{section_title}}}\n"
+                latex_content += self._escape_latex(paper_content[section_key])
+                latex_content += "\n\n"
+        
+        # References
+        if paper_content.get('references'):
+            latex_content += "\\begin{thebibliography}{99}\n"
+            for i, reference in enumerate(paper_content['references'], 1):
+                clean_ref = self._escape_latex(reference)
+                latex_content += f"\\bibitem{{ref{i}}} {clean_ref}\n\n"
+            latex_content += "\\end{thebibliography}\n"
+        
+        latex_content += "\\end{document}\n"
+        
+        return latex_content
+    
+    def generate_acm_template(self, paper_content: Dict) -> str:
+        """Generate ACM article template"""
+        latex_content = """\\documentclass[sigconf]{acmart}
+
+\\usepackage{booktabs}
+\\usepackage{ccicons}
+
+\\begin{document}
+
+"""
+        
+        # Title and authors
+        title = self._escape_latex(paper_content.get('title', 'Research Paper'))
+        latex_content += f"\\title{{{title}}}\n\n"
+        
+        latex_content += """\\author{AI Research Paper Generator}
+\\affiliation{%
+  \\institution{Hackathon Project 2024}
+  \\city{Generated}
+  \\country{Automatically}
+}
+\\email{ai-generator@hackathon.com}
+
+\\begin{abstract}
+"""
+        
+        # Abstract
+        if 'abstract' in paper_content:
+            latex_content += self._escape_latex(paper_content['abstract'])
+        
+        latex_content += "\n\\end{abstract}\n\n"
+        
+        # CCS concepts and keywords
+        latex_content += """\\begin{CCSXML}
+<ccs2012>
+<concept>
+<concept_id>10010147.10010178.10010179</concept_id>
+<concept_desc>Computing methodologies~Artificial intelligence</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+</ccs2012>
+\\end{CCSXML}
+
+\\ccsdesc[500]{Computing methodologies~Artificial intelligence}
+
+"""
+        
+        if paper_content.get('metadata', {}).get('keywords'):
+            keywords = ', '.join(paper_content['metadata']['keywords'])
+            latex_content += f"\\keywords{{{self._escape_latex(keywords)}}}\n\n"
+        
+        latex_content += "\\maketitle\n\n"
+        
+        # Sections
+        sections = [
+            ('introduction', 'Introduction'),
+            ('literature_review', 'Related Work'),
+            ('methodology', 'Methodology'),
+            ('results', 'Results and Discussion'),
+            ('conclusion', 'Conclusion')
+        ]
+        
+        for section_key, section_title in sections:
+            if section_key in paper_content:
+                latex_content += f"\\section{{{section_title}}}\n"
+                latex_content += self._escape_latex(paper_content[section_key])
+                latex_content += "\n\n"
+        
+        # References
+        if paper_content.get('references'):
+            latex_content += "\\begin{thebibliography}{99}\n"
+            for i, reference in enumerate(paper_content['references'], 1):
+                clean_ref = self._escape_latex(reference)
+                latex_content += f"\\bibitem{{ref{i}}} {clean_ref}\n\n"
+            latex_content += "\\end{thebibliography}\n"
+        
+        latex_content += "\\end{document}\n"
+        
+        return latex_content

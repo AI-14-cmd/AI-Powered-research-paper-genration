@@ -1,0 +1,204 @@
+/* Enhanced Features CSS */
+
+/* Quality Analysis Styles */
+.quality-analyzer {
+    background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.grade-display {
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+    padding: 1rem;
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.grade-a { background: linear-gradient(135deg, #d4edda, #c3e6cb); color: #155724; }
+.grade-b { background: linear-gradient(135deg, #cce7ff, #b3d9ff); color: #004085; }
+.grade-c { background: linear-gradient(135deg, #fff3cd, #ffeaa7); color: #856404; }
+.grade-d { background: linear-gradient(135deg, #f8d7da, #f5c6cb); color: #721c24; }
+.grade-f { background: linear-gradient(135deg, #f8d7da, #f5c6cb); color: #721c24; }
+
+/* Enhanced Export Dropdown */
+.dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    transform: translateX(5px);
+}
+
+/* Share Modal Enhancements */
+.modal-content {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    border-radius: 15px 15px 0 0;
+}
+
+/* Progress Bars */
+.progress {
+    height: 8px;
+    border-radius: 4px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #007bff, #28a745);
+    border-radius: 4px;
+    transition: width 0.6s ease;
+}
+
+/* Enhanced Cards */
+.card-header.bg-info {
+    background: linear-gradient(135deg, #17a2b8, #138496) !important;
+}
+
+.card-header.bg-warning {
+    background: linear-gradient(135deg, #ffc107, #e0a800) !important;
+}
+
+/* Peer Review Styling */
+.peer-review-score {
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-align: center;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.score-excellent { background: linear-gradient(135deg, #d4edda, #c3e6cb); color: #155724; }
+.score-good { background: linear-gradient(135deg, #cce7ff, #b3d9ff); color: #004085; }
+.score-fair { background: linear-gradient(135deg, #fff3cd, #ffeaa7); color: #856404; }
+.score-poor { background: linear-gradient(135deg, #f8d7da, #f5c6cb); color: #721c24; }
+
+/* Enhanced Button Group */
+.btn-group .btn {
+    margin-right: 0;
+    border-radius: 0;
+}
+
+.btn-group .btn:first-child {
+    border-radius: 8px 0 0 8px;
+}
+
+.btn-group .btn:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+.btn-group .dropdown-toggle {
+    border-left: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Trending Topics Styling */
+.trending-badge {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.trend-score {
+    background: linear-gradient(135deg, #00b894, #00a085);
+    color: white;
+    padding: 0.1rem 0.4rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+}
+
+/* Loading Enhancements */
+.loading-progress {
+    background: linear-gradient(90deg, #007bff, #28a745, #ffc107, #dc3545);
+    background-size: 400% 400%;
+    animation: gradientShift 2s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* New Feature Highlights */
+.feature-highlight {
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-highlight::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Export Format Icons */
+.format-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    display: inline-block;
+}
+
+.format-pdf { background: linear-gradient(135deg, #dc3545, #c82333); }
+.format-docx { background: linear-gradient(135deg, #007bff, #0056b3); }
+.format-latex { background: linear-gradient(135deg, #28a745, #1e7e34); }
+.format-markdown { background: linear-gradient(135deg, #6f42c1, #5a32a3); }
+.format-html { background: linear-gradient(135deg, #fd7e14, #e55a00); }
+
+/* Responsive Enhancements */
+@media (max-width: 768px) {
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        border-radius: 8px !important;
+        margin-bottom: 0.5rem;
+    }
+    
+    .grade-display {
+        font-size: 2rem;
+        width: 80px;
+        height: 80px;
+    }
+    
+    .peer-review-score {
+        font-size: 2rem;
+    }
+}
