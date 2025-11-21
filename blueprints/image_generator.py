@@ -1,30 +1,16 @@
 from flask import Blueprint, request, jsonify
-from services.image_generator import ImageGenerator
 
 image_bp = Blueprint('image_generator', __name__)
-image_gen = ImageGenerator()
+# image_gen = ImageGenerator() # DISABLED FOR VERCEL DEPLOYMENT
 
 @image_bp.route('/api/images/generate', methods=['POST'])
 def generate_images():
-    """Generate charts and images for research paper"""
-    try:
-        data = request.get_json()
-        topic = data.get('topic', '')
-        paper_content = data.get('paper_content', {})
-        
-        if not topic:
-            return jsonify({'error': 'Topic is required'}), 400
-        
-        charts = image_gen.generate_research_charts(topic, paper_content)
-        
-        return jsonify({
-            'success': True,
-            'charts': charts,
-            'count': len(charts)
-        })
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    """Generate charts and images for research paper - DISABLED FOR Vercel Deployment"""
+    return jsonify({
+        'success': True,
+        'charts': [],
+        'count': 0
+    })
 
 @image_bp.route('/api/images/chart-types', methods=['GET'])
 def get_chart_types():
