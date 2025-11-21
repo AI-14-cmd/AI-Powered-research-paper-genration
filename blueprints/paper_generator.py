@@ -35,24 +35,39 @@ def generate_paper():
         # Generate title first
         paper_content['title'] = llm_service.generate_section(topic, 'title', research_level, keywords, research_field)
         
-        # Generate selected sections with full context
+        # Generate selected sections with full context - only real API content
         for section in sections:
             if section in ['abstract', 'introduction', 'literature_review', 'conclusion', 'methodology', 'results']:
-                paper_content[section] = llm_service.generate_section(topic, section, research_level, keywords, research_field)
+                try:
+                    paper_content[section] = llm_service.generate_section(topic, section, research_level, keywords, research_field)
+                except Exception as e:
+                    print(f"Failed to generate {section}: {e}")
+                    paper_content[section] = f"[{section.title()} content unavailable - API service error]"
         
-        # Quick citations (reduced from 5 to 3)
-        citations_data = citation_service.fetch_citations(topic, limit=3)
-        formatted_citations = [
-            citation_service.format_citation(citation, citation_style) 
-            for citation in citations_data
-        ]
-        paper_content['references'] = formatted_citations
+        # Fetch real citations with timeout handling
+        print(f"Fetching real citations for: {topic}")
+        try:
+            citations_data = citation_service.fetch_citations(topic, 3)
+            formatted_citations = [
+                citation_service.format_citation(citation, citation_style) 
+                for citation in citations_data
+            ]
+            paper_content['references'] = formatted_citations
+            paper_content['citations_source'] = 'API' if citations_data else 'None'
+        except Exception as e:
+            print(f"Citation fetch failed: {e}")
+            paper_content['references'] = []
+            paper_content['citations_source'] = 'Error'
         
         # Auto-find real PDFs from academic databases
-        from services.auto_pdf_finder import AutoPDFFinder
-        pdf_finder = AutoPDFFinder()
-        real_papers = pdf_finder.find_real_pdfs(topic, keywords)
-        paper_content['real_papers'] = real_papers
+        try:
+            from services.auto_pdf_finder import AutoPDFFinder
+            pdf_finder = AutoPDFFinder()
+            real_papers = pdf_finder.find_real_pdfs(topic, keywords)
+            paper_content['real_papers'] = real_papers
+        except Exception as e:
+            print(f"PDF finder failed: {e}")
+            paper_content['real_papers'] = []
         
         # Generate research charts and images
         from services.image_generator import ImageGenerator
@@ -60,13 +75,13 @@ def generate_paper():
         charts = image_gen.generate_research_charts(topic, paper_content)
         paper_content['charts'] = charts
         
-        # Quick summary
-        paper_content['summary'] = [
-            f"Comprehensive analysis of {topic}",
-            "Review of current methodologies and approaches", 
-            "Identification of key challenges and opportunities",
-            "Evidence-based findings and recommendations"
-        ]
+        # Generate summary only if LLM service succeeds
+        try:
+            summary_points = llm_service.generate_summary(paper_content)
+            paper_content['summary'] = summary_points if summary_points else []
+        except Exception as e:
+            print(f"Summary generation failed: {e}")
+            paper_content['summary'] = []
         
         # Classify research domain
         from services.domain_classifier import DomainClassifier

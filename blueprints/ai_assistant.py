@@ -28,11 +28,11 @@ def enhance_section():
         
         prompt = enhancements.get(enhancement_type, enhancements['clarity'])
         
-        # Try to use LLM, fallback to mock enhancement
+        # Use real LLM only - no fallback
         try:
             enhanced_text = llm_service.generate_section("enhancement", "custom", "intermediate")
-        except:
-            enhanced_text = _mock_enhance_text(text, enhancement_type)
+        except Exception as e:
+            return jsonify({'error': f'Enhancement service unavailable: {str(e)}'}), 503
         
         return jsonify({
             'success': True,
@@ -162,16 +162,7 @@ def comprehensive_quality_check(paper_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-def _mock_enhance_text(text, enhancement_type):
-    """Fallback text enhancement when LLM is not available"""
-    enhancements = {
-        'clarity': f"The research demonstrates that {text.lower()}. This finding is significant because it provides clear evidence for the proposed hypothesis.",
-        'academic_tone': f"The scholarly investigation reveals that {text.lower()}. Furthermore, this empirical evidence substantiates the theoretical framework presented herein.",
-        'expand': f"{text} Additionally, this concept encompasses several key dimensions that warrant further examination. The implications of these findings extend beyond the immediate scope of this study.",
-        'concise': f"Research shows {text.lower()}, indicating significant implications for the field.",
-        'technical': f"The quantitative analysis demonstrates {text.lower()}, with statistical significance (p < 0.05) supporting the hypothesis through rigorous methodological approaches."
-    }
-    return enhancements.get(enhancement_type, text)
+
 
 def _generate_strengths(paper, metrics):
     strengths = []

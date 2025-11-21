@@ -17,46 +17,27 @@ class AutoPDFFinder:
             self.gemini_model = None
     
     def find_real_pdfs(self, topic: str, keywords: List[str] = None) -> List[Dict]:
-        """Automatically find real PDF papers for the topic"""
+        """Find real academic papers using multiple APIs"""
+        papers = []
         
-        if not self.gemini_model:
-            return self._get_fallback_pdfs(topic)
-        
+        # Try arXiv API first
         try:
-            keyword_context = f" focusing on {', '.join(keywords)}" if keywords else ""
-            
-            prompt = f"""
-            Find 3-5 real, published academic papers about "{topic}"{keyword_context}.
-            
-            For each paper, provide:
-            - Exact title of published paper
-            - Real author names
-            - Journal/conference name
-            - Publication year (2018-2024)
-            - DOI if available
-            - Brief abstract summary
-            - PDF URL if publicly available
-            
-            Format as:
-            PAPER 1:
-            Title: [exact title]
-            Authors: [real authors]
-            Journal: [journal name] ([year])
-            DOI: [DOI or "Not available"]
-            Abstract: [brief summary]
-            PDF: [URL or "Not publicly available"]
-            
-            Only include papers that actually exist and can be verified.
-            """
-            
-            response = self.gemini_model.generate_content(prompt)
-            if response and response.text:
-                return self._parse_pdf_response(response.text)
-                
+            arxiv_papers = self._search_arxiv(topic, keywords)
+            papers.extend(arxiv_papers)
         except Exception as e:
-            print(f"Auto PDF finder error: {e}")
+            print(f"arXiv API error: {e}")
         
-        return self._get_fallback_pdfs(topic)
+        # Try Semantic Scholar API
+        try:
+            semantic_papers = self._search_semantic_scholar(topic)
+            papers.extend(semantic_papers)
+        except Exception as e:
+            print(f"Semantic Scholar API error: {e}")
+        
+        if not papers:
+            print(f"No real papers found for {topic} - API services unavailable")
+            return []
+        return papers[:5]
     
     def _parse_pdf_response(self, response_text: str) -> List[Dict]:
         """Parse Gemini response into paper objects"""
@@ -97,39 +78,73 @@ class AutoPDFFinder:
         
         return papers[:5]
     
-    def _get_fallback_pdfs(self, topic: str) -> List[Dict]:
-        """Generate topic-specific fallback papers with realistic details"""
+    def _search_arxiv(self, topic: str, keywords: List[str] = None) -> List[Dict]:
+        """Search arXiv for real papers"""
+        import urllib.parse
         
-        if 'fmri' in topic.lower() or 'brain' in topic.lower():
-            return [
-                {
-                    'title': f'Deep Learning Approaches for {topic}: A Comprehensive Analysis',
-                    'authors': 'Zhang, L., Wang, H., Chen, X.',
-                    'journal': 'NeuroImage',
-                    'year': '2023',
-                    'doi': '10.1016/j.neuroimage.2023.120045',
-                    'abstract': f'This study presents novel deep learning methods for {topic.lower()}, achieving 92.3% accuracy in classification tasks with improved spatial resolution.',
-                    'pdf_url': 'https://example.com/neuroimage2023.pdf'
-                },
-                {
-                    'title': f'Machine Learning Applications in {topic}: Current State and Future Directions',
-                    'authors': 'Johnson, A., Smith, K., Brown, M.',
-                    'journal': 'Nature Neuroscience',
-                    'year': '2022',
-                    'doi': '10.1038/s41593-022-01156-7',
-                    'abstract': f'We review recent advances in machine learning for {topic.lower()}, highlighting key methodological improvements and clinical applications.',
-                    'pdf_url': 'https://example.com/nature2022.pdf'
-                }
-            ]
-        else:
-            return [
-                {
-                    'title': f'Advanced Methods in {topic}: A Systematic Review',
-                    'authors': 'Anderson, P., Taylor, M., Clark, J.',
-                    'journal': 'Journal of Advanced Research',
-                    'year': '2023',
-                    'doi': f'10.1016/j.jare.2023.{topic.lower().replace(" ", "")}',
-                    'abstract': f'This systematic review analyzes current methodologies in {topic.lower()}, identifying key trends and future research opportunities.',
-                    'pdf_url': 'https://example.com/jar2023.pdf'
-                }
-            ]
+        query = topic
+        if keywords:
+            query = f"{topic} {' '.join(keywords[:2])}"
+        
+        encoded_query = urllib.parse.quote(query)
+        url = f"http://export.arxiv.org/api/query?search_query=all:{encoded_query}&start=0&max_results=3"
+        
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        
+        papers = []
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(response.content)
+        
+        for entry in root.findall('{http://www.w3.org/2005/Atom}entry'):
+            title = entry.find('{http://www.w3.org/2005/Atom}title').text.strip()
+            authors = [author.find('{http://www.w3.org/2005/Atom}name').text 
+                      for author in entry.findall('{http://www.w3.org/2005/Atom}author')]
+            published = entry.find('{http://www.w3.org/2005/Atom}published').text[:4]
+            summary = entry.find('{http://www.w3.org/2005/Atom}summary').text.strip()[:200]
+            pdf_url = entry.find('{http://www.w3.org/2005/Atom}id').text.replace('abs', 'pdf') + '.pdf'
+            
+            papers.append({
+                'title': title,
+                'authors': ', '.join(authors[:3]),
+                'journal': 'arXiv preprint',
+                'year': published,
+                'doi': f"arXiv:{entry.find('{http://www.w3.org/2005/Atom}id').text.split('/')[-1]}",
+                'abstract': summary,
+                'pdf_url': pdf_url
+            })
+        
+        return papers
+    
+    def _search_semantic_scholar(self, topic: str) -> List[Dict]:
+        """Search Semantic Scholar for real papers"""
+        url = "https://api.semanticscholar.org/graph/v1/paper/search"
+        params = {
+            'query': topic,
+            'limit': 3,
+            'fields': 'title,authors,year,journal,abstract,openAccessPdf'
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        
+        papers = []
+        for paper in data.get('data', []):
+            if paper.get('title') and paper.get('authors'):
+                pdf_url = None
+                if paper.get('openAccessPdf'):
+                    pdf_url = paper['openAccessPdf'].get('url')
+                
+                papers.append({
+                    'title': paper['title'],
+                    'authors': ', '.join([author.get('name', 'Unknown') for author in paper.get('authors', [])[:3]]),
+                    'journal': paper.get('journal', {}).get('name', 'Unknown Journal') if paper.get('journal') else 'Unknown Journal',
+                    'year': str(paper.get('year', 'n.d.')),
+                    'doi': paper.get('paperId', ''),
+                    'abstract': paper.get('abstract', 'Abstract not available')[:200],
+                    'pdf_url': pdf_url or 'Not publicly available'
+                })
+        
+        return papers
+    

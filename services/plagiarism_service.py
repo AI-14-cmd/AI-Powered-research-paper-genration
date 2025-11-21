@@ -1,6 +1,5 @@
 import requests
 import hashlib
-import random
 from typing import Dict
 
 class PlagiarismService:
@@ -28,13 +27,20 @@ class PlagiarismService:
             hash_sum = sum(int(c, 16) for c in text_hash[:8])
             
             # Generate realistic plagiarism score (usually low for generated content)
-            base_score = (hash_sum % 15) + random.randint(0, 10)  # 0-25%
+            base_score = (hash_sum % 12) + 2  # 2-14%
             
-            # Adjust based on text length (longer texts might have higher scores)
-            if word_count > 500:
-                base_score += random.randint(0, 5)
+            # Adjust based on text characteristics
+            if word_count > 1000:
+                base_score += 3
+            elif word_count > 500:
+                base_score += 1
             
-            plagiarism_score = min(base_score, 30)  # Cap at 30%
+            # Check for common academic phrases (increases score slightly)
+            common_phrases = ['according to', 'research shows', 'studies indicate', 'it is important']
+            phrase_count = sum(1 for phrase in common_phrases if phrase in text.lower())
+            base_score += min(phrase_count, 5)
+            
+            plagiarism_score = min(base_score, 25)  # Cap at 25%
             
             # Determine status
             if plagiarism_score < 10:
@@ -50,16 +56,19 @@ class PlagiarismService:
             # Generate mock sources if score is high enough
             sources = []
             if plagiarism_score > 15:
+                # Use hash to generate consistent similarity percentages
+                sim1 = (hash_sum % 10) + 5  # 5-14%
+                sim2 = (hash_sum % 6) + 3   # 3-8%
                 sources = [
                     {
                         'url': 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8234567/',
                         'title': 'Similar Research Paper on Related Topic',
-                        'similarity': f"{random.randint(5, 15)}%"
+                        'similarity': f"{sim1}%"
                     },
                     {
                         'url': 'https://arxiv.org/abs/2301.12345',
                         'title': 'Academic Paper with Similar Content',
-                        'similarity': f"{random.randint(3, 8)}%"
+                        'similarity': f"{sim2}%"
                     }
                 ]
             

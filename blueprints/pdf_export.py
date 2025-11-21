@@ -26,11 +26,15 @@ def export_pdf():
         temp_dir = tempfile.gettempdir()
         temp_path = os.path.join(temp_dir, filename)
         
-        # Generate PDF
+        # Generate PDF with charts
         if include_metadata and 'plagiarism_check' in paper_data:
-            pdf_service.create_with_metadata(paper_data, paper_data['plagiarism_check'])
+            pdf_buffer = pdf_service.create_with_metadata(paper_data, paper_data['plagiarism_check'])
+            with open(temp_path, 'wb') as f:
+                f.write(pdf_buffer.getvalue())
         else:
-            pdf_service.generate_pdf(paper_data, temp_path)
+            pdf_buffer = pdf_service.generate_pdf(paper_data)
+            with open(temp_path, 'wb') as f:
+                f.write(pdf_buffer.getvalue())
         
         # Return file
         return send_file(
@@ -66,8 +70,10 @@ def export_paper_pdf(paper_id):
         temp_dir = tempfile.gettempdir()
         temp_path = os.path.join(temp_dir, filename)
         
-        # Generate PDF
-        pdf_service.generate_pdf(paper_content, temp_path)
+        # Generate PDF with charts
+        pdf_buffer = pdf_service.generate_pdf(paper_content)
+        with open(temp_path, 'wb') as f:
+            f.write(pdf_buffer.getvalue())
         
         return send_file(
             temp_path,

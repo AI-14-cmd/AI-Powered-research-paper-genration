@@ -4,33 +4,33 @@ import os
 from typing import Dict, List
 from dotenv import load_dotenv
 
+# Configure Gemini API globally
+load_dotenv()
+genai.configure(api_key='AIzaSyCZq5xnAeug9WX5FrdB8dgV-8eOgevEta4')
+
 class LLMService:
     def __init__(self):
         # Ensure environment variables are loaded
         load_dotenv()
         
-        # Initialize OpenAI
-        openai.api_key = os.getenv('OPENAI_API_KEY')
-        
-        # Initialize Gemini
-        self.gemini_api_key = os.getenv('GEMINI_API_KEY')
-        if self.gemini_api_key and self.gemini_api_key.strip():
+        # Initialize OpenAI as fallback
+        self.openai_key = os.getenv('OPENAI_API_KEY', 'sk-test-key-placeholder')
+        if self.openai_key and self.openai_key != 'sk-test-key-placeholder':
             try:
-                genai.configure(api_key=self.gemini_api_key.strip())
-                self.gemini_model = genai.GenerativeModel('gemini-1.5-flash')
-                # Test Gemini immediately
-                test_response = self.gemini_model.generate_content('Test')
-                if test_response and test_response.text:
-                    print(f"Gemini test successful: {test_response.text[:20]}...")
-                else:
-                    print("Gemini test failed - no response")
-                    self.gemini_model = None
-                print(f"Gemini initialized successfully with key: {self.gemini_api_key[:10]}...")
+                openai.api_key = self.openai_key
+                print(f"OpenAI configured as fallback: {self.openai_key[:10]}...")
             except Exception as e:
-                print(f"Gemini initialization error: {e}")
-                self.gemini_model = None
-        else:
-            print("No Gemini API key found")
+                print(f"OpenAI configuration error: {e}")
+                self.openai_key = None
+        
+        # Initialize Gemini with API key
+        self.gemini_api_key = os.getenv('GEMINI_API_KEY', 'AIzaSyCZq5xnAeug9WX5FrdB8dgV-8eOgevEta4')
+        try:
+            genai.configure(api_key=self.gemini_api_key)
+            self.gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+            print(f"Gemini initialized: {self.gemini_api_key[:10]}...")
+        except Exception as e:
+            print(f"Gemini initialization failed: {e}")
             self.gemini_model = None
         
         # Preferred LLM (gemini, openai, or fallback)
@@ -45,98 +45,57 @@ class LLMService:
         field_context = f" in the field of {research_field}" if research_field else ""
         
         prompts = {
-            'title': f"Generate ONE concise academic research paper title about '{topic}'{keyword_context}{field_context}. Return ONLY the title text, nothing else. Maximum 15 words, no options or explanations.",
-            'abstract': f"Write a comprehensive {word_count}-word academic abstract for '{topic}'{keyword_context}. Structure it with: (1) Background/Problem statement with current research gap, (2) Specific research objectives and hypothesis, (3) Detailed methodology including sample size, data collection methods, and analysis techniques, (4) Key quantitative results with specific metrics/percentages, (5) Practical implications and significance to the field. Use precise technical terminology and include specific numbers where appropriate. Make it publication-ready for a top-tier journal.",
-            'introduction': f"Write a comprehensive {word_count}-word introduction for '{topic}'{keyword_context}. Include: current state of the field, specific research gap being addressed, clear research objectives, hypothesis if applicable, and significance to the scientific community.",
-            'literature_review': f"Write a thorough {word_count}-word literature review on '{topic}'{keyword_context}. Discuss: recent breakthrough studies (2020-2024), current methodological approaches, key researchers in the field, identified limitations in existing work, and emerging trends.",
-            'conclusion': f"Write a detailed {word_count}-word conclusion for '{topic}'{keyword_context}. Include: specific research contributions, quantitative results summary, practical applications, study limitations, and concrete future research directions.",
-            'methodology': f"Write a detailed {word_count}-word methodology section for '{topic}'{keyword_context}. Include: experimental design, participant/sample details, data collection procedures, analysis techniques, and validation methods.",
-            'results': f"Write a comprehensive {word_count}-word results section for '{topic}'{keyword_context}. Present: quantitative findings, statistical analysis outcomes, key discoveries, and data interpretation."
+            'title': f"Generate ONE concise IEEE conference paper title about '{topic}'{keyword_context}{field_context}. Return ONLY the title text, nothing else. Maximum 12 words, no options or explanations.",
+            'abstract': f"Write a {word_count}-word IEEE-style abstract for '{topic}'{keyword_context}. Structure: (1) Problem statement, (2) Approach/methodology, (3) Key results with specific metrics, (4) Conclusions. Use numbered citations [1], [2]. End with 'Keywords:' followed by 5-7 relevant keywords.",
+            'introduction': f"Write Section 1. INTRODUCTION ({word_count} words) for '{topic}'{keyword_context}. Include numbered subsections (1.1, 1.2). Use IEEE citations [1], [2]. Cover: problem background, research gap, objectives, contributions. Reference figures as Fig. 1, tables as Table I.",
+            'literature_review': f"Write Section 2. RELATED WORK ({word_count} words) for '{topic}'{keyword_context}. Use numbered subsections (2.1, 2.2). Include IEEE citations [1]-[5]. Discuss recent work (2020-2024), compare approaches, identify gaps.",
+            'methodology': f"Write Section 3. METHODOLOGY ({word_count} words) for '{topic}'{keyword_context}. Use subsections (3.1, 3.2). Include equations if relevant. Reference Fig. 2, Table II. Describe experimental setup, algorithms, evaluation metrics.",
+            'results': f"Write Section 4. RESULTS ({word_count} words) for '{topic}'{keyword_context}. Use subsections (4.1, 4.2). Present quantitative results, reference Fig. 3, Table III. Include performance metrics, comparisons with baselines.",
+            'discussion': f"Write Section 4. DISCUSSION ({word_count} words) for '{topic}'{keyword_context}. Use subsections (4.1, 4.2). Analyze results, compare with related work, discuss implications, limitations.",
+            'conclusion': f"Write Section 5. CONCLUSION ({word_count} words) for '{topic}'{keyword_context}. Summarize contributions, key findings, limitations, future work. No subsections needed."
         }
         
         prompt = prompts.get(section, f"Write about {section} for {topic}")
         
-        # Try Gemini first, fallback on any error (including quota exceeded)
-        if self.gemini_model and self.gemini_api_key:
-            try:
-                print(f"Generating {section} with Gemini for topic: {topic}")
-                response = self.gemini_model.generate_content(prompt)
+        # Try Gemini API first
+        try:
+            genai.configure(api_key='AIzaSyCZq5xnAeug9WX5FrdB8dgV-8eOgevEta4')
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            response = model.generate_content(prompt)
+            
+            if response and response.text and len(response.text.strip()) > 20:
+                print(f"Generated {len(response.text)} chars for {section} with Gemini")
+                return response.text.strip()
                 
-                if response and response.text and len(response.text.strip()) > 50:
-                    print(f"SUCCESS: Generated {len(response.text)} chars for {section}")
-                    return response.text.strip()
-                else:
-                    print(f"WARNING: Short/empty Gemini response for {section}, using fallback")
-                    
+        except Exception as e:
+            print(f"Gemini failed for {section}: {e}")
+        
+        # Try OpenAI as fallback
+        if self.openai_key:
+            try:
+                import openai
+                openai.api_key = self.openai_key
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "You are an expert academic writer."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=1500,
+                    temperature=0.7
+                )
+                content = response.choices[0].message.content
+                if content and len(content.strip()) > 20:
+                    print(f"Generated {len(content)} chars for {section} with OpenAI")
+                    return content.strip()
             except Exception as e:
-                print(f"GEMINI ERROR for {section}: {e}")
-                if "quota" in str(e).lower() or "429" in str(e):
-                    print(f"Quota exceeded, using high-quality fallback for {section}")
-                else:
-                    print(f"API error, using fallback for {section}")
+                print(f"OpenAI also failed for {section}: {e}")
         
-        # Use high-quality fallback content
-        print(f"Using fallback content for {section}")
-        return self._get_fallback_content(topic, section, research_level, keywords, research_field)
+        # Generate basic content as last resort
+        print(f"Using basic content generator for {section}")
+        return self._generate_basic_content(topic, section, research_level, keywords, research_field)
     
-    def _get_fallback_content(self, topic: str, section: str, research_level: str = 'intermediate', keywords: list = None, research_field: str = None) -> str:
-        # Generate high-quality topic-specific fallback content
-        keyword_text = f" with emphasis on {', '.join(keywords)}" if keywords else ""
-        field_text = f" in {research_field}" if research_field else ""
-        
-        if section == 'title':
-            if keywords:
-                return f"{keywords[0].title()} Applications in {topic}: A Comprehensive Analysis"
-            return f"Advanced {topic} Systems: Current Methodologies and Future Directions"
-            
-        elif section == 'abstract':
-            return f"""Background: {topic}{field_text} represents a rapidly evolving research domain with significant implications for technological advancement and practical applications{keyword_text}. Current methodologies face challenges in scalability, accuracy, and real-world implementation, creating a critical need for innovative approaches. Objective: This comprehensive study aims to analyze existing frameworks, identify key limitations, and propose enhanced methodologies for {topic.lower()} systems. We hypothesize that integrated approaches combining machine learning, data analytics, and domain-specific optimization can significantly improve performance metrics. Methods: Our research employed a systematic mixed-methods approach involving literature analysis of 127 peer-reviewed publications (2020-2024), experimental validation using datasets from three major repositories, and comparative analysis with baseline methods. Data collection included performance metrics from 15 different algorithmic approaches, with statistical analysis using ANOVA and regression modeling. Results: Findings demonstrate substantial improvements in key performance indicators, with accuracy rates reaching 89.7% (±2.3%, p<0.001) compared to traditional methods at 73.2%. Processing efficiency improved by 31%, while computational overhead decreased by 24%. The proposed framework showed consistent performance across diverse test scenarios with 94% reliability. Conclusions: This research contributes significant advances to {topic.lower()} methodology, providing evidence-based solutions with immediate practical applications. The findings have implications for both academic research and industrial implementation, suggesting clear pathways for future development and optimization."""
-            
-        elif section == 'introduction':
-            return f"""The field of {topic}{field_text} has experienced unprecedented growth in recent years, driven by advances in computational capabilities, data availability, and algorithmic sophistication{keyword_text}. This rapid evolution has created both opportunities and challenges for researchers and practitioners seeking to develop effective solutions for complex real-world problems. Current approaches to {topic.lower()} demonstrate significant potential but face limitations in terms of scalability, generalizability, and practical implementation across diverse application domains.
 
-The primary motivation for this research stems from identified gaps in existing methodologies, particularly regarding the integration of theoretical frameworks with practical implementation requirements. While numerous studies have addressed individual aspects of {topic.lower()}, there remains a critical need for comprehensive approaches that can effectively bridge the gap between academic research and industrial applications. This study addresses these challenges by proposing novel methodologies that combine established theoretical foundations with innovative practical solutions.
-
-Our research objectives focus on three key areas: (1) comprehensive analysis of current {topic.lower()} methodologies and their limitations, (2) development of enhanced frameworks that address identified shortcomings, and (3) empirical validation of proposed approaches through extensive testing and comparison with existing methods. The significance of this work extends beyond academic contributions, offering practical solutions that can be immediately implemented in real-world scenarios while providing a foundation for future research and development in this critical field."""
-            
-        elif section == 'literature_review':
-            return f"""Recent literature in {topic}{field_text} reveals a dynamic research landscape characterized by rapid technological advancement and increasing practical applications{keyword_text}. Comprehensive analysis of publications from 2020-2024 demonstrates significant progress in both theoretical understanding and methodological development, with particular emphasis on addressing scalability and real-world implementation challenges.
-
-Seminal works by leading researchers have established foundational frameworks that continue to influence current research directions. Notable contributions include breakthrough studies in algorithmic optimization, data processing methodologies, and system integration approaches. These foundational works have been extended and refined by subsequent research, creating a robust theoretical foundation for current {topic.lower()} applications.
-
-Current methodological approaches can be categorized into three primary paradigms: traditional analytical methods, machine learning-based solutions, and hybrid approaches that combine multiple techniques. Each paradigm offers distinct advantages and limitations, with recent research focusing on identifying optimal application scenarios and developing improved integration strategies. Emerging trends indicate increasing emphasis on automated optimization, real-time processing capabilities, and adaptive system architectures.
-
-Identified limitations in existing work include challenges related to computational complexity, data quality requirements, and generalizability across different application domains. Recent studies have begun addressing these limitations through innovative approaches including distributed processing architectures, advanced data preprocessing techniques, and domain-adaptive algorithms. These developments represent significant progress toward more robust and practical {topic.lower()} solutions."""
-            
-        elif section == 'conclusion':
-            return f"""This comprehensive study has provided significant insights into {topic}{field_text}, demonstrating both the current state of the field and promising directions for future development{keyword_text}. Our research contributions include detailed analysis of existing methodologies, identification of key limitations, and development of enhanced approaches that address critical challenges in {topic.lower()} implementation.
-
-Key findings from our experimental validation demonstrate substantial improvements in performance metrics, with proposed methodologies achieving accuracy rates of 89.7% compared to baseline methods at 73.2%. These results represent a 22.6% improvement in accuracy while maintaining computational efficiency and reducing processing overhead by 24%. The consistency of results across diverse test scenarios (94% reliability) indicates robust performance characteristics suitable for practical implementation.
-
-Practical applications of this research extend across multiple domains, offering immediate benefits for both academic researchers and industry practitioners. The proposed frameworks provide scalable solutions that can be adapted to specific application requirements while maintaining high performance standards. Implementation guidelines developed through this research facilitate adoption and customization for diverse use cases.
-
-Study limitations include the focus on specific algorithmic approaches and the need for additional validation across broader application domains. Future research should address these limitations through expanded experimental validation, investigation of alternative methodological approaches, and development of more comprehensive evaluation frameworks. Recommended research directions include exploration of advanced optimization techniques, investigation of real-time processing capabilities, and development of adaptive system architectures that can respond to changing operational requirements."""
-            
-        elif section == 'methodology':
-            return f"""This research employed a comprehensive mixed-methods approach designed to provide rigorous analysis of {topic}{field_text} methodologies and empirical validation of proposed enhancements{keyword_text}. The study design incorporated both quantitative experimental validation and qualitative analysis of existing literature to ensure comprehensive coverage of research objectives.
-
-Experimental design followed a systematic approach involving three primary phases: (1) comprehensive literature review and baseline establishment, (2) development and implementation of enhanced methodologies, and (3) comparative evaluation and statistical analysis. The research protocol was designed to ensure reproducibility and statistical validity while addressing potential confounding variables and bias sources.
-
-Data collection procedures involved systematic gathering of performance metrics from multiple sources, including established benchmark datasets, synthetic test scenarios, and real-world application cases. Primary datasets included 15 different algorithmic implementations tested across 127 distinct scenarios, with each test case involving multiple performance measurements and statistical validation procedures. Data quality assurance protocols ensured consistency and reliability of collected measurements.
-
-Analytical techniques employed advanced statistical methods including ANOVA for group comparisons, regression analysis for relationship identification, and machine learning algorithms for pattern recognition and prediction. Statistical significance was established using p<0.05 criteria, with effect sizes calculated to determine practical significance. Cross-validation procedures ensured robustness of findings and generalizability of results across different application contexts."""
-            
-        elif section == 'results':
-            return f"""Experimental validation of proposed {topic}{field_text} methodologies yielded significant findings across all measured performance indicators{keyword_text}. Comprehensive analysis of 127 test scenarios demonstrated consistent improvements over baseline methods, with statistical significance established across multiple evaluation criteria.
-
-Primary performance metrics showed substantial improvements, with accuracy rates reaching 89.7% (±2.3%, p<0.001) compared to traditional methods achieving 73.2% (±3.1%). This represents a 22.6% improvement in accuracy with reduced variance, indicating both enhanced performance and increased reliability. Processing efficiency metrics demonstrated 31% improvement in computational speed while maintaining accuracy standards.
-
-Comparative analysis across different algorithmic approaches revealed distinct performance characteristics for various application scenarios. Machine learning-based methods showed superior performance in complex pattern recognition tasks (accuracy: 91.2%), while traditional analytical approaches maintained advantages in computational efficiency for simpler scenarios (processing time: 15% faster). Hybrid approaches combining multiple techniques achieved optimal balance between accuracy and efficiency.
-
-Statistical analysis confirmed significance of observed improvements across all major performance categories. Effect sizes ranged from medium (Cohen's d = 0.6) for efficiency improvements to large (Cohen's d = 1.2) for accuracy enhancements. Cross-validation results demonstrated consistent performance across diverse test conditions, with 94% reliability maintained across different operational scenarios and data characteristics."""
-            
-        else:
-            return f"""This section provides comprehensive analysis of {section} in the context of {topic}{field_text}, incorporating current research findings and methodological approaches{keyword_text}. The discussion integrates theoretical foundations with practical implementation considerations, offering insights relevant to both academic research and practical applications. Key findings demonstrate significant advances in understanding and methodology, with implications for future research and development in this important field."""
     
     def _generate_with_gemini(self, prompt: str) -> str:
         try:
@@ -188,7 +147,11 @@ Statistical analysis confirmed significance of observed improvements across all 
                 response = self.gemini_model.generate_content(prompt)
                 return self._parse_papers_response(response.text, topic)
             except Exception as e:
+                error_str = str(e).lower()
                 print(f"Gemini paper search error: {e}")
+                if any(keyword in error_str for keyword in ["quota", "429", "rate limit", "exceeded"]):
+                    print("⚠️  API quota exceeded - using curated paper database")
+                    self.gemini_model = None
         
         return self._get_fallback_papers(topic)
     
@@ -223,20 +186,40 @@ Statistical analysis confirmed significance of observed improvements across all 
         if current_paper:
             papers.append(current_paper)
         
-        return papers[:5] if papers else self._get_fallback_papers(topic)
+        return papers[:5] if papers else []
     
     def _get_fallback_papers(self, topic: str) -> List[Dict]:
-        """Fallback papers when Gemini fails"""
-        return [
-            {
-                "title": f"Machine Learning Applications in {topic}",
-                "authors": "Zhang, L., Wang, H., Liu, S.",
-                "journal": "IEEE Transactions on Neural Networks",
-                "year": "2023",
-                "doi": "10.1109/TNNLS.2023.001",
-                "abstract": f"This study presents novel machine learning approaches for {topic.lower()}, demonstrating significant improvements over traditional methods."
-            }
-        ]
+        """No fallback papers - return empty list"""
+        return []
+    
+    def _generate_basic_content(self, topic: str, section: str, research_level: str = 'intermediate', keywords: list = None, research_field: str = None) -> str:
+        """Generate basic content when APIs fail"""
+        keyword_text = f" focusing on {', '.join(keywords)}" if keywords else ""
+        field_text = f" in {research_field}" if research_field else ""
+        
+        if section == 'title':
+            return f"{topic}: A Comprehensive Study{field_text}"
+            
+        elif section == 'abstract':
+            return f"This study examines {topic.lower()}{field_text}{keyword_text}. The research addresses current challenges and proposes innovative solutions. Through systematic analysis and evaluation, this work contributes to the understanding of {topic.lower()} applications. The findings demonstrate significant potential for practical implementation and future research directions. Keywords: {', '.join(keywords) if keywords else 'research, analysis, methodology'}."
+            
+        elif section == 'introduction':
+            return f"The field of {topic.lower()}{field_text} has gained significant attention in recent years{keyword_text}. This research addresses key challenges and opportunities in the domain. The study aims to provide comprehensive analysis and practical insights. Current approaches face limitations that this work seeks to address through innovative methodologies and systematic evaluation."
+            
+        elif section == 'literature_review':
+            return f"Recent literature in {topic.lower()}{field_text} reveals diverse approaches and methodologies{keyword_text}. Researchers have explored various techniques and frameworks to address domain-specific challenges. Current studies demonstrate both achievements and limitations in existing approaches. This review identifies key research gaps and opportunities for future investigation."
+            
+        elif section == 'methodology':
+            return f"This research employs a systematic approach to investigate {topic.lower()}{field_text}{keyword_text}. The methodology includes comprehensive data collection, analysis techniques, and evaluation frameworks. Experimental design ensures reliable and reproducible results. Validation procedures confirm the effectiveness of proposed approaches."
+            
+        elif section == 'results':
+            return f"The experimental evaluation of {topic.lower()} approaches demonstrates significant improvements{keyword_text}. Performance metrics show enhanced effectiveness compared to baseline methods. Statistical analysis confirms the reliability of findings. Results indicate practical applicability and potential for real-world implementation."
+            
+        elif section == 'conclusion':
+            return f"This study provides valuable insights into {topic.lower()}{field_text}{keyword_text}. The research contributes to theoretical understanding and practical applications. Key findings demonstrate the effectiveness of proposed approaches. Future work should explore additional applications and refinements of the methodology."
+            
+        else:
+            return f"This section discusses {section} in the context of {topic.lower()}{field_text}{keyword_text}. The analysis provides important insights and contributes to the overall understanding of the research domain."
     
     def generate_bibliography_file(self, papers: List[Dict], citation_style: str) -> str:
         """Generate a separate bibliography file"""
@@ -284,7 +267,11 @@ Statistical analysis confirmed significance of observed improvements across all 
                 summary = response.text.strip()
                 return [point.strip('• -') for point in summary.split('\n') if point.strip()]
             except Exception as e:
+                error_str = str(e).lower()
                 print(f"Gemini summary error: {e}")
+                if any(keyword in error_str for keyword in ["quota", "429", "rate limit", "exceeded"]):
+                    print("⚠️  API quota exceeded - using offline summary generation")
+                    self.gemini_model = None
         
         # Try OpenAI
         if openai.api_key:
@@ -300,11 +287,5 @@ Statistical analysis confirmed significance of observed improvements across all 
             except Exception as e:
                 print(f"OpenAI summary error: {e}")
         
-        # Fallback summary
-        return [
-            "Comprehensive analysis of the research topic",
-            "Review of current literature and methodologies", 
-            "Identification of key challenges and opportunities",
-            "Evidence-based findings and recommendations",
-            "Future research directions and implications"
-        ]
+        # Return empty list if APIs fail
+        return []

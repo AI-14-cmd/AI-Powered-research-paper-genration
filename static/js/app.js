@@ -20,10 +20,13 @@ class PaperGenerator {
             this.generatePaper();
         });
 
-        // Plagiarism check
-        document.getElementById('plagiarismBtn').addEventListener('click', () => {
-            this.checkPlagiarism();
-        });
+        // Plagiarism check (optional)
+        const plagiarismBtn = document.getElementById('plagiarismBtn');
+        if (plagiarismBtn) {
+            plagiarismBtn.addEventListener('click', () => {
+                this.checkPlagiarism();
+            });
+        }
 
         // PDF download
         const downloadBtn = document.getElementById('downloadBtn');
@@ -195,21 +198,27 @@ class PaperGenerator {
         container.innerHTML = html;
         document.getElementById('resultsSection').style.display = 'block';
         
-        // Show download buttons
+        // Show and activate download buttons
         const downloadBtn = document.getElementById('downloadBtn');
         const latexBtn = document.getElementById('latexBtn');
         const packageBtn = document.getElementById('packageBtn');
         
         if (downloadBtn) {
             downloadBtn.style.display = 'inline-block';
+            downloadBtn.style.visibility = 'visible';
+            downloadBtn.disabled = false;
             downloadBtn.onclick = () => this.downloadPDF();
         }
         if (latexBtn) {
             latexBtn.style.display = 'inline-block';
+            latexBtn.style.visibility = 'visible';
+            latexBtn.disabled = false;
             latexBtn.onclick = () => this.downloadLaTeX();
         }
         if (packageBtn) {
             packageBtn.style.display = 'inline-block';
+            packageBtn.style.visibility = 'visible';
+            packageBtn.disabled = false;
             packageBtn.onclick = () => this.downloadCompletePackage();
         }
         

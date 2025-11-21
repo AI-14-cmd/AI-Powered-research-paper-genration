@@ -15,6 +15,8 @@ from blueprints.collaboration import collab_bp
 from blueprints.ai_assistant import assistant_bp
 from blueprints.latex_templates import latex_bp
 from blueprints.pdf_import import pdf_import_bp
+from blueprints.image_generator import image_bp
+from blueprints.ai_paper_generator import ai_paper_bp
 from models.database import init_db
 
 app = Flask(__name__)
@@ -42,6 +44,8 @@ app.register_blueprint(collab_bp, url_prefix='/api/collaboration')
 app.register_blueprint(assistant_bp, url_prefix='/api/assistant')
 app.register_blueprint(latex_bp, url_prefix='/api/latex')
 app.register_blueprint(pdf_import_bp, url_prefix='/api/import')
+app.register_blueprint(image_bp)
+app.register_blueprint(ai_paper_bp, url_prefix='/api/ai-paper')
 
 @app.route('/')
 def index():

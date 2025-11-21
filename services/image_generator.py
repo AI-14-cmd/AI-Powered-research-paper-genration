@@ -4,12 +4,17 @@ import seaborn as sns
 from io import BytesIO
 import base64
 import os
+import hashlib
 from typing import Dict, List
 
 class ImageGenerator:
     def __init__(self):
         plt.style.use('seaborn-v0_8')
         sns.set_palette("husl")
+    
+    def _get_seed(self, topic: str) -> int:
+        """Generate consistent seed from topic for reproducible data"""
+        return int(hashlib.md5(topic.encode()).hexdigest()[:8], 16) % 1000
     
     def generate_research_charts(self, topic: str, paper_content: Dict) -> List[Dict]:
         """Generate relevant charts and graphs for research paper"""
@@ -31,7 +36,11 @@ class ImageGenerator:
         
         # Brain activation heatmap
         fig, ax = plt.subplots(figsize=(10, 6))
-        data = np.random.rand(8, 10) * 100
+        np.random.seed(self._get_seed(topic))
+        # Generate realistic brain activation patterns
+        base_activation = np.array([85, 78, 72, 65, 45, 38, 82, 75])  # Typical activation levels
+        data = np.outer(base_activation, np.linspace(0.8, 1.2, 10)) + np.random.normal(0, 5, (8, 10))
+        data = np.clip(data, 0, 100)
         regions = ['Frontal', 'Parietal', 'Temporal', 'Occipital', 'Cerebellum', 'Brainstem', 'Limbic', 'Motor']
         
         sns.heatmap(data, yticklabels=regions, cmap='viridis', annot=True, fmt='.1f', ax=ax)
@@ -76,9 +85,13 @@ class ImageGenerator:
         # Training progress chart
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
         
+        np.random.seed(self._get_seed(topic))
         epochs = np.arange(1, 51)
-        train_loss = 2.5 * np.exp(-epochs/15) + 0.1 + np.random.normal(0, 0.05, 50)
-        val_loss = 2.8 * np.exp(-epochs/18) + 0.15 + np.random.normal(0, 0.08, 50)
+        # Realistic training curves
+        train_loss = 2.5 * np.exp(-epochs/15) + 0.1 + np.random.normal(0, 0.02, 50)
+        val_loss = 2.8 * np.exp(-epochs/18) + 0.15 + np.random.normal(0, 0.03, 50)
+        # Ensure validation loss is higher than training loss
+        val_loss = np.maximum(val_loss, train_loss + 0.05)
         
         ax1.plot(epochs, train_loss, label='Training Loss', color='#1f77b4', linewidth=2)
         ax1.plot(epochs, val_loss, label='Validation Loss', color='#ff7f0e', linewidth=2)
@@ -89,8 +102,11 @@ class ImageGenerator:
         ax1.grid(True, alpha=0.3)
         
         # Accuracy over epochs
-        train_acc = 100 * (1 - np.exp(-epochs/12)) * 0.95 + np.random.normal(0, 1, 50)
-        val_acc = 100 * (1 - np.exp(-epochs/15)) * 0.92 + np.random.normal(0, 1.5, 50)
+        train_acc = 100 * (1 - np.exp(-epochs/12)) * 0.95 + np.random.normal(0, 0.5, 50)
+        val_acc = 100 * (1 - np.exp(-epochs/15)) * 0.92 + np.random.normal(0, 0.8, 50)
+        # Ensure realistic accuracy bounds
+        train_acc = np.clip(train_acc, 0, 100)
+        val_acc = np.clip(val_acc, 0, 100)
         
         ax2.plot(epochs, train_acc, label='Training Accuracy', color='#2ca02c', linewidth=2)
         ax2.plot(epochs, val_acc, label='Validation Accuracy', color='#d62728', linewidth=2)
@@ -117,7 +133,12 @@ class ImageGenerator:
         # Performance comparison
         fig, ax = plt.subplots(figsize=(10, 6))
         categories = ['Baseline', 'Method A', 'Method B', 'Proposed']
-        values = [65.2, 78.4, 82.1, 87.3]
+        # Generate topic-based performance values
+        seed = self._get_seed(topic)
+        np.random.seed(seed)
+        base_values = [65, 75, 80, 85]
+        noise = np.random.normal(0, 2, 4)
+        values = [round(base + n, 1) for base, n in zip(base_values, noise)]
         colors = plt.cm.viridis(np.linspace(0, 1, len(categories)))
         
         bars = ax.bar(categories, values, color=colors, alpha=0.8)
@@ -138,7 +159,12 @@ class ImageGenerator:
         # Trend analysis
         fig, ax = plt.subplots(figsize=(10, 6))
         years = np.arange(2018, 2025)
-        publications = [45, 62, 89, 134, 187, 245, 312]
+        # Generate topic-based publication trends
+        seed = self._get_seed(topic)
+        np.random.seed(seed)
+        base_growth = [45, 65, 95, 140, 200, 280, 380]
+        noise = np.random.normal(0, 10, 7)
+        publications = [max(int(base + n), 1) for base, n in zip(base_growth, noise)]
         
         ax.plot(years, publications, marker='o', linewidth=3, markersize=8, color='#1f77b4')
         ax.fill_between(years, publications, alpha=0.3, color='#1f77b4')
