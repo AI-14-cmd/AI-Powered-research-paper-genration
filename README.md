@@ -206,4 +206,3 @@ Built for TCS Hackathon 2024 - Demonstrating practical AI applications in academ
 
 ---
 
-**Made with ❤️ for the academic community**
